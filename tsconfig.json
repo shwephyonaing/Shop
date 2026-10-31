@@ -28,6 +28,9 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
+    "generated/prisma8/**/*.d.ts",
+    "app/generated/prisma/**/*.d.ts",
+
     "**/*.mts"
   ],
   "exclude": ["node_modules"]

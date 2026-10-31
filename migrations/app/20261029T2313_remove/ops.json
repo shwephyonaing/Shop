@@ -1,0 +1,52 @@
+[
+  {
+    "id": "dropColumn.user.password",
+    "label": "Drop column \"password\" from \"user\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "password",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"password\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "password"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"password\" on \"user\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"password\"",
+        "sql": "ALTER TABLE \"public\".\"user\" DROP COLUMN \"password\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"password\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "password"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"password\" on \"user\""
+        }
+      }
+    ]
+  }
+]
