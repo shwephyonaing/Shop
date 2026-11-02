@@ -126,216 +126,216 @@ export async function registerUser(data: RegisterInput) {
   return { success: true, data: { email: normalizedEmail } };
 }
 
-// export async function completeRegistrationVerification(input: OtpInput) {
-//   const parsed = otpSchema.safeParse(input);
+export async function completeRegistrationVerification(input: OtpInput) {
+  const parsed = otpSchema.safeParse(input);
 
-//   if (!parsed.success) {
-//     return {
-//       success: false,
-//       fieldErrors: z.flattenError(parsed.error).fieldErrors,
-//     };
-//   }
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
 
-//   const { email, otp } = parsed.data;
-//   const normalizedEmail = email.toLowerCase();
+  const { email, otp } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
 
-//   try {
-//     await auth.api.verifyEmailOTP({
-//       body: {
-//         email: normalizedEmail,
-//         otp,
-//       },
-//       headers: await headers(),
-//     });
-//   } catch (error) {
-//     const message =
-//       error instanceof APIError
-//         ? error.message
-//         : "Failed to verify OTP. Please try again later.";
+  try {
+    await auth.api.verifyEmailOTP({
+      body: {
+        email: normalizedEmail,
+        otp,
+      },
+      headers: await headers(),
+    });
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to verify OTP. Please try again later.";
 
-//     if (message.toLocaleLowerCase().includes("invalid otp")) {
-//       return {
-//         success: false,
-//         error: "Invalid OTP. Please check the code and try again.",
-//       };
-//     }
+    if (message.toLocaleLowerCase().includes("invalid otp")) {
+      return {
+        success: false,
+        error: "Invalid OTP. Please check the code and try again.",
+      };
+    }
 
-//     if (message.toLocaleLowerCase().includes("expired")) {
-//       return {
-//         success: false,
-//         error: "OTP has expired. Please request a new code.",
-//       };
-//     }
+    if (message.toLocaleLowerCase().includes("expired")) {
+      return {
+        success: false,
+        error: "OTP has expired. Please request a new code.",
+      };
+    }
 
-//     if (message.toLocaleLowerCase().includes("too many attempts")) {
-//       return {
-//         success: false,
-//         error: "Too many failed attempts. Please request a new code.",
-//       };
-//     }
+    if (message.toLocaleLowerCase().includes("too many attempts")) {
+      return {
+        success: false,
+        error: "Too many failed attempts. Please request a new code.",
+      };
+    }
 
-//     return { success: false, error: message };
-//   }
+    return { success: false, error: message };
+  }
 
-//   await applyPendingRegistration(normalizedEmail);
+  await applyPendingRegistration(normalizedEmail);
 
-//   return { success: true };
-// }
+  return { success: true };
+}
 
-// export async function resendRegistrationVerification(input: { email: string }) {
-//   const parsed = emailSchema.safeParse(input);
+export async function resendRegistrationVerification(input: { email: string }) {
+  const parsed = emailSchema.safeParse(input);
 
-//   if (!parsed.success) {
-//     return {
-//       success: false,
-//       fieldErrors: z.flattenError(parsed.error).fieldErrors,
-//     };
-//   }
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
 
-//   const normalizedEmail = input.email.toLowerCase();
+  const normalizedEmail = input.email.toLowerCase();
 
-//   const existingUser = await db.orm.public.User.select(
-//     "emailVerified",
-//     "role",
-//     "isFrozen",
-//   )
-//     .where({ email: normalizedEmail })
-//     .first();
+  const existingUser = await db.orm.public.User.select(
+    "emailVerified",
+    "role",
+    "isFrozen",
+  )
+    .where({ email: normalizedEmail })
+    .first();
 
-//   if (!existingUser) {
-//     return {
-//       success: false,
-//       error: "No account found with this email. Please register first.",
-//     };
-//   }
+  if (!existingUser) {
+    return {
+      success: false,
+      error: "No account found with this email. Please register first.",
+    };
+  }
 
-//   if (existingUser?.isFrozen) {
-//     return {
-//       success: false,
-//       error: ErrorCodes.ACCOUNT_FROZEN.message,
-//       code: ErrorCodes.ACCOUNT_FROZEN.code,
-//     };
-//   }
+  if (existingUser?.isFrozen) {
+    return {
+      success: false,
+      error: ErrorCodes.ACCOUNT_FROZEN.message,
+      code: ErrorCodes.ACCOUNT_FROZEN.code,
+    };
+  }
 
-//   if (isAdminRole(existingUser.role)) {
-//     return {
-//       success: false,
-//       error: ErrorCodes.ADMIN_ACCOUNT.message,
-//       code: ErrorCodes.ADMIN_ACCOUNT.code,
-//     };
-//   }
+  if (isAdminRole(existingUser.role)) {
+    return {
+      success: false,
+      error: ErrorCodes.ADMIN_ACCOUNT.message,
+      code: ErrorCodes.ADMIN_ACCOUNT.code,
+    };
+  }
 
-//   if (existingUser?.emailVerified) {
-//     return {
-//       success: false,
-//       error: "This account is already verified. Please log in.",
-//     };
-//   }
+  if (existingUser?.emailVerified) {
+    return {
+      success: false,
+      error: "This account is already verified. Please log in.",
+    };
+  }
 
-//   try {
-//     await auth.api.sendVerificationOTP({
-//       body: {
-//         email: normalizedEmail,
-//         type: "email-verification",
-//       },
-//       headers: await headers(),
-//     });
-//   } catch (error) {
-//     const message =
-//       error instanceof APIError
-//         ? error.message
-//         : "Failed to resend verification email. Please try again later.";
-//     return { success: false, error: message };
-//   }
+  try {
+    await auth.api.sendVerificationOTP({
+      body: {
+        email: normalizedEmail,
+        type: "email-verification",
+      },
+      headers: await headers(),
+    });
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to resend verification email. Please try again later.";
+    return { success: false, error: message };
+  }
 
-//   return {
-//     success: true,
-//     data: { email: normalizedEmail },
-//     message: "Verification email resent successfully.",
-//   };
-// }
+  return {
+    success: true,
+    data: { email: normalizedEmail },
+    message: "Verification email resent successfully.",
+  };
+}
 
-// export async function validateLoginCredentials(input: LoginInput) {
-//   const parsed = loginSchema.safeParse(input);
+export async function validateLoginCredentials(input: LoginInput) {
+  const parsed = loginSchema.safeParse(input);
 
-//   if (!parsed.success) {
-//     return {
-//       success: false,
-//       fieldErrors: z.flattenError(parsed.error).fieldErrors,
-//     };
-//   }
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
 
-//   const { email, password } = parsed.data;
+  const { email, password } = parsed.data;
 
-//   const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.toLowerCase();
 
-//   const existingUser = await db.orm.public.User.select("role", "isFrozen")
-//     .where({ email: normalizedEmail })
-//     .first();
+  const existingUser = await db.orm.public.User.select("role", "isFrozen")
+    .where({ email: normalizedEmail })
+    .first();
 
-//   if (!existingUser) {
-//     return {
-//       success: false,
-//       error: "No account found with this email. Please register first.",
-//     };
-//   }
+  if (!existingUser) {
+    return {
+      success: false,
+      error: "No account found with this email. Please register first.",
+    };
+  }
 
-//   if (existingUser?.isFrozen) {
-//     return {
-//       success: false,
-//       error: ErrorCodes.ACCOUNT_FROZEN.message,
-//       code: ErrorCodes.ACCOUNT_FROZEN.code,
-//     };
-//   }
+  if (existingUser?.isFrozen) {
+    return {
+      success: false,
+      error: ErrorCodes.ACCOUNT_FROZEN.message,
+      code: ErrorCodes.ACCOUNT_FROZEN.code,
+    };
+  }
 
-//   if (isAdminRole(existingUser.role)) {
-//     return {
-//       success: false,
-//       error: ErrorCodes.ADMIN_ACCOUNT.message,
-//       code: ErrorCodes.ADMIN_ACCOUNT.code,
-//     };
-//   }
+  if (isAdminRole(existingUser.role)) {
+    return {
+      success: false,
+      error: ErrorCodes.ADMIN_ACCOUNT.message,
+      code: ErrorCodes.ADMIN_ACCOUNT.code,
+    };
+  }
 
-//   try {
-//     const signInResponse = await auth.api.signInEmail({
-//       body: {
-//         email: normalizedEmail,
-//         password,
-//       },
-//       headers: await headers(),
-//     });
+  try {
+    const signInResponse = await auth.api.signInEmail({
+      body: {
+        email: normalizedEmail,
+        password,
+      },
+      headers: await headers(),
+    });
 
-//     if (!signInResponse) {
-//       return {
-//         success: false,
-//         error:
-//           "Invalid email or password. Please check your credentials and try again.",
-//       };
-//     }
+    if (!signInResponse) {
+      return {
+        success: false,
+        error:
+          "Invalid email or password. Please check your credentials and try again.",
+      };
+    }
 
-//     await auth.api.signOut({
-//       headers: await headers(),
-//     });
+    await auth.api.signOut({
+      headers: await headers(),
+    });
 
-//     await auth.api.sendVerificationOTP({
-//       body: {
-//         email: normalizedEmail,
-//         type: "sign-in",
-//       },
-//       headers: await headers(),
-//     });
+    await auth.api.sendVerificationOTP({
+      body: {
+        email: normalizedEmail,
+        type: "sign-in",
+      },
+      headers: await headers(),
+    });
 
-//     return {
-//       success: true,
-//       data: { email: normalizedEmail },
-//       message:
-//         "Login credentials validated successfully. Please check your email for the verification code.",
-//     };
-//   } catch (error) {
-//     const message =
-//       error instanceof APIError
-//         ? error.message
-//         : "Failed to validate login credentials. Please try again later.";
-//     return { success: false, error: message };
-//   }
-// }
+    return {
+      success: true,
+      data: { email: normalizedEmail },
+      message:
+        "Login credentials validated successfully. Please check your email for the verification code.",
+    };
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to validate login credentials. Please try again later.";
+    return { success: false, error: message };
+  }
+}

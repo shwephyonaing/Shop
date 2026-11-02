@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker";
+
+import { Marker, MarkerContent } from "@/components/ui/marker";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -13,14 +14,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { type RegisterInput, registerSchema } from "@/src/lib/validation/auth";
-//import { registerUser } from "@/app/actions/auth";
-import { signUp, emailOtp } from "@/src/lib/auth-client";
+import { registerUser } from "@/app/actions/auth";
 import AuthFormPanel from "./auth-form-panel";
 import Link from "next/link";
-import { registerUser } from "@/app/actions/auth";
-//import { $strip } from "zod/v4/core";
-//import GoogleSignInButton from "./google-sign-in-button";
+import GoogleSignInButton from "./google-sign-in-button";
+import { RegisterInput, registerSchema } from "@/src/lib/validation/auth";
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -35,27 +33,6 @@ export default function SignUpForm() {
     },
   });
 
-  // function onSubmit(data: RegisterInput) {
-  //   startTransition(async () => {
-  //     const result = await signUp.email({
-  //       name: data.name,
-  //       email: data.email,
-  //       password: data.password,
-  //     });
-  //     if (result.error) {
-  //       form.setError("root", { message: result.error.message });
-  //       return;
-  //     }
-  //     const verifyotp = await emailOtp.sendVerificationOtp({
-  //       email: data.email,
-  //       type: "email-verification",
-  //     });
-  //     if (verifyotp.error) {
-  //       form.setError("root", { message: verifyotp.error.message });
-  //       return;
-  //     }
-  //     router.push(`/verify-otp?email=${data.email}&flow=register`);
-  //   });
   function onSubmit(data: RegisterInput) {
     startTransition(async () => {
       const result = await registerUser(data);
@@ -110,6 +87,7 @@ export default function SignUpForm() {
         </>
       }
     >
+      <GoogleSignInButton />
       <Marker variant="separator">
         <MarkerContent className="text-muted-foreground text-[11px] font-medium tracking-[0.18em] uppercase">
           or continue with email

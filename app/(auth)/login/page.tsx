@@ -1,7 +1,22 @@
-import React from "react";
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { getSession } from "@/src/lib/session";
+import LoginForm from "@/components/auth/login-form";
 
-function Login() {
-  return <div>Login</div>;
+async function LoginPageContent() {
+  const session = await getSession();
+
+  if (session) {
+    redirect("/");
+  }
+
+  return <LoginForm />;
 }
 
-export default Login;
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginForm />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}

@@ -1,7 +1,5 @@
-import React from "react";
+import VerifyOtpForm from "@/components/auth/verify-otp-form";
 
-function VerifyOtp() {
-  return <div>VerifyOtp</div>;
+export default function verifyOtp() {
+  return <VerifyOtpForm />;
 }
-
-export default VerifyOtp;
