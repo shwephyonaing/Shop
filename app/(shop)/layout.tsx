@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { Toaster } from "@/components/ui/toast";
 
 import { getSession } from "@/src/lib/session";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,6 +73,7 @@ export default function ShopLayout({
   return (
     <Suspense fallback={<ShopLayoutFallback />}>
       <ShopShell>{children}</ShopShell>
+      <Toaster />
     </Suspense>
   );
 }
