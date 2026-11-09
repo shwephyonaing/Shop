@@ -45,11 +45,12 @@ export const auth = betterAuth({
         const subjects: Record<string, string> = {
           "email-verification": "Verify Your Email",
           "sign-in": "Your Sign-In Code",
+          "forget-password": "Reset Your Password",
           forget_password: "Reset Your Password",
         };
         await sendEmail({
           to: email,
-          subject: subjects[type],
+          subject: subjects[type] || "Reset Your Password",
           html: `<p>Your verification code is: <strong>${otp}</strong></p>`,
         });
       },

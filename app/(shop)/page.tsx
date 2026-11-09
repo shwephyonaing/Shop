@@ -5,7 +5,7 @@ import CategoryFilter from "@/components/product/catefory-filter";
 import { ProductGridSkeleton } from "@/components/product/product-grid-skeleton";
 import { CategoryValue } from "@/src/lib/product-utils";
 import ProductGrid from "@/components/product/product-grid";
-//import { homeMetadata } from "@/lib/seo";
+import { homeMetadata } from "@/src/lib/seo";
 
 const VALID_CATEGORIES = ["MEN", "WOMEN", "TEENS", "CHILD", "KIDS"] as const;
 
@@ -27,12 +27,12 @@ type HomePageProps = {
   searchParams: Promise<{ category?: string }>;
 };
 
-// export async function generateMetadata({
-//   searchParams,
-// }: HomePageProps): Promise<Metadata> {
-//   const { category } = await searchParams;
-//   return homeMetadata(parseCategory(category));
-// }
+export async function generateMetadata({
+  searchParams,
+}: HomePageProps): Promise<Metadata> {
+  const { category } = await searchParams;
+  return homeMetadata(parseCategory(category));
+}
 
 async function ProductGridSection({ searchParams }: ProductGridSectionProps) {
   const { category } = await searchParams;

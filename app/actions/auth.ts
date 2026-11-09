@@ -12,6 +12,12 @@ import {
   OtpInput,
   emailSchema,
   loginSchema,
+  forgotPasswordSchema,
+  resetPasswordWithOtpSchema,
+  updatePasswordSchema,
+  ForgotPasswordInput,
+  ResetPasswordWithOtpInput,
+  UpdatePasswordInput,
 } from "@/src/lib/validation/auth";
 import { db } from "@/src/lib/prisma";
 import { auth } from "@/src/lib/auth";
@@ -336,6 +342,197 @@ export async function validateLoginCredentials(input: LoginInput) {
       error instanceof APIError
         ? error.message
         : "Failed to validate login credentials. Please try again later.";
+    return { success: false, error: message };
+  }
+}
+
+export async function requestPasswordReset(data: ForgotPasswordInput) {
+  const parsed = forgotPasswordSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
+
+  const { email } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
+
+  const user = await db.orm.public.User.select("id", "isFrozen")
+    .where({ email: normalizedEmail })
+    .first();
+
+  if (!user) {
+    return {
+      success: false,
+      error: "No account found with this email address.",
+    };
+  }
+
+  if (user.isFrozen) {
+    return {
+      success: false,
+      error: ErrorCodes.ACCOUNT_FROZEN.message,
+      code: ErrorCodes.ACCOUNT_FROZEN.code,
+    };
+  }
+
+  try {
+    await auth.api.sendVerificationOTP({
+      body: {
+        email: normalizedEmail,
+        type: "forget-password",
+      },
+      headers: await headers(),
+    });
+
+    return {
+      success: true,
+      data: { email: normalizedEmail },
+      message: "A verification code has been sent to your email.",
+    };
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to send verification code. Please try again later.";
+    return { success: false, error: message };
+  }
+}
+
+export async function verifyResetPasswordOtp(data: OtpInput) {
+  const parsed = otpSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
+
+  const { email, otp } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    await auth.api.checkVerificationOTP({
+      body: {
+        email: normalizedEmail,
+        type: "forget-password",
+        otp,
+      },
+      headers: await headers(),
+    });
+
+    return {
+      success: true,
+      data: { email: normalizedEmail, otp },
+    };
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to verify OTP. Please try again.";
+
+    if (message.toLowerCase().includes("invalid")) {
+      return {
+        success: false,
+        error: "Invalid verification code. Please check and try again.",
+      };
+    }
+
+    if (message.toLowerCase().includes("expired")) {
+      return {
+        success: false,
+        error: "Verification code has expired. Please request a new code.",
+      };
+    }
+
+    return { success: false, error: message };
+  }
+}
+
+export async function updatePasswordAction(data: UpdatePasswordInput) {
+  const parsed = updatePasswordSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
+
+  const { email, otp, password } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    await auth.api.resetPasswordEmailOTP({
+      body: {
+        email: normalizedEmail,
+        otp,
+        password,
+      },
+      headers: await headers(),
+    });
+
+    // Auto sign in user after updating password
+    try {
+      await auth.api.signInEmail({
+        body: {
+          email: normalizedEmail,
+          password,
+        },
+        headers: await headers(),
+      });
+    } catch {
+      // If auto-signin encounters any warning, proceed
+    }
+
+    return {
+      success: true,
+      message: "Password updated successfully.",
+    };
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to update password. Please check your verification code.";
+    return { success: false, error: message };
+  }
+}
+
+export async function resetPasswordWithOtp(data: ResetPasswordWithOtpInput) {
+  const parsed = resetPasswordWithOtpSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+    };
+  }
+
+  const { email, otp, password } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    await auth.api.resetPasswordEmailOTP({
+      body: {
+        email: normalizedEmail,
+        otp,
+        password,
+      },
+      headers: await headers(),
+    });
+
+    return {
+      success: true,
+      message: "Password reset successfully. You can now sign in.",
+    };
+  } catch (error) {
+    const message =
+      error instanceof APIError
+        ? error.message
+        : "Failed to reset password. Please check your OTP and try again.";
     return { success: false, error: message };
   }
 }

@@ -12,7 +12,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, useTransition } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ import AuthFormPanel from "./auth-form-panel";
 import {
   completeRegistrationVerification,
   resendRegistrationVerification,
+  verifyResetPasswordOtp,
 } from "@/app/actions/auth";
 import { emailOtp, signIn } from "@/src/lib/auth-client";
 import { OtpInput, otpSchema } from "@/src/lib/validation/auth";
@@ -52,6 +53,23 @@ function VerifyOtpFormInner() {
     },
   });
 
+  useEffect(() => {
+    form.reset({ email, otp: "" });
+    form.clearErrors();
+    setResendMessage(null);
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        form.reset({ email, otp: "" });
+        form.clearErrors();
+        setResendMessage(null);
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [email, form]);
+
   function onSubmit(data: OtpInput) {
     form.clearErrors("root");
     startTransition(async () => {
@@ -67,6 +85,24 @@ function VerifyOtpFormInner() {
           });
           return;
         }
+      } else if (flow === "forget-password") {
+        const result = await verifyResetPasswordOtp(data);
+        if (!result.success) {
+          form.setError("root", {
+            message: result.error || "Failed to verify OTP. Please try again.",
+          });
+          return;
+        }
+        form.reset({ email: "", otp: "" });
+        form.clearErrors();
+        const updateUrl = new URL(
+          "/forget-password/update-password",
+          window.location.origin,
+        );
+        updateUrl.searchParams.set("email", data.email);
+        updateUrl.searchParams.set("otp", data.otp);
+        router.push(updateUrl.toString());
+        return;
       } else {
         // Handle registration flow
         const result = await completeRegistrationVerification(data);
@@ -87,6 +123,8 @@ function VerifyOtpFormInner() {
           return;
         }
       }
+      form.reset({ email: "", otp: "" });
+      form.clearErrors();
       router.replace(callbackUrl);
     });
   }
@@ -94,10 +132,10 @@ function VerifyOtpFormInner() {
   function handleResendCode() {
     startTransition(async () => {
       setResendMessage(null);
-      if (flow === "login") {
+      if (flow === "login" || flow === "forget-password") {
         const { error } = await emailOtp.sendVerificationOtp({
           email,
-          type: "sign-in",
+          type: flow === "login" ? "sign-in" : "forget-password",
         });
 
         if (error) {
@@ -145,7 +183,7 @@ function VerifyOtpFormInner() {
       title="Check your email"
       description={`Please enter the 6-digit code sent to : ${email}.`}
     >
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off">
         <FieldGroup className="gap-5">
           <Controller
             name="otp"
@@ -213,6 +251,11 @@ function VerifyOtpFormInner() {
           </Button>
           <Link
             href={flow === "login" ? "/login" : "/register"}
+            onClick={() => {
+              form.reset({ email: "", otp: "" });
+              form.clearErrors();
+              setResendMessage(null);
+            }}
             className="text-muted-foreground text-center text-sm underline-offset-4 hover:underline"
           >
             Use a different email address

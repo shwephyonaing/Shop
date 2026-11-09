@@ -1,12 +1,21 @@
+"use client";
+
+import { useState } from "react";
+import { signIn } from "@/src/lib/auth-client";
 import { Button } from "@/components/ui/button";
+
+type GoogleSignInButtonProps = {
+  callbackUrl?: string;
+};
 
 function GoogleIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 48 48"
-      width="24px"
-      height="24px"
+      width="20px"
+      height="20px"
+      className="shrink-0"
     >
       <path
         fill="#FFC107"
@@ -28,15 +37,32 @@ function GoogleIcon() {
   );
 }
 
-function GoogleSignInButton() {
+function GoogleSignInButton({ callbackUrl = "/" }: GoogleSignInButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      await signIn.social({
+        provider: "google",
+        callbackURL: callbackUrl,
+      });
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Button
       type="button"
       variant="outline"
-      className="border-border/80 bg-background hover:bg-muted/40 h-11 w-full rounded-xl shadow-sm"
+      disabled={isLoading}
+      onClick={handleSignIn}
+      className="border-border/80 bg-background hover:bg-muted/40 h-11 w-full rounded-xl shadow-xs gap-2.5 font-medium text-sm transition-all"
     >
       <GoogleIcon />
-      Sign in with Google
+      <span>{isLoading ? "Connecting to Google..." : "Continue with Google"}</span>
     </Button>
   );
 }

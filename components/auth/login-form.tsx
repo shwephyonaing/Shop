@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useTransition } from "react";
+import { Suspense, useEffect, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sanitizeCallbackUrl } from "@/src/lib/auth/safe-redirect";
@@ -29,6 +29,21 @@ function LoginFormInner() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  useEffect(() => {
+    form.reset({ email: "", password: "" });
+    form.clearErrors();
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        form.reset({ email: "", password: "" });
+        form.clearErrors();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [form]);
 
   function onSubmit(values: LoginInput) {
     startTransition(async () => {
@@ -65,6 +80,9 @@ function LoginFormInner() {
         return;
       }
 
+      form.reset({ email: "", password: "" });
+      form.clearErrors();
+
       const verifyOtpUrl = new URL("/verify-otp", window.location.origin);
       verifyOtpUrl.searchParams.set("email", result.data!.email);
       verifyOtpUrl.searchParams.set("flow", "login");
@@ -92,13 +110,13 @@ function LoginFormInner() {
         </>
       }
     >
-      <GoogleSignInButton />
+      <GoogleSignInButton callbackUrl={callbackUrl} />
       <Marker variant="separator">
         <MarkerContent className="text-muted-foreground text-[11px] font-medium tracking-[0.18em] uppercase">
           or continue with email
         </MarkerContent>
       </Marker>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off">
         <FieldGroup className="gap-5">
           <Controller
             name="email"
@@ -123,7 +141,15 @@ function LoginFormInner() {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <Link
+                    href="/forget-password"
+                    className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"

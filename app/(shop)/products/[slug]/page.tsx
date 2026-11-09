@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProductBySlug } from "@/src/lib/product";
 import ProductDetailClient from "@/components/product/product-detail-client";
-//import { productJsonLd, productMetadata } from "@/lib/seo";
-//import { JsonLd } from "@/components/seo/json-Id";
+import { productJsonLd, productMetadata } from "@/src/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 
 type ProductPageProps = {
   params: Promise<{
@@ -16,21 +16,21 @@ type ProductPageProps = {
   }>;
 };
 
-// export async function generateMetadata({
-//   params,
-// }: ProductPageProps): Promise<Metadata> {
-//   const { slug } = await params;
-//   const product = await getProductBySlug(slug);
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
 
-//   if (!product) {
-//     return {
-//       title: "Product not found",
-//       robots: { index: false, follow: false },
-//     };
-//   }
+  if (!product) {
+    return {
+      title: "Product not found",
+      robots: { index: false, follow: false },
+    };
+  }
 
-//   return productMetadata(product);
-// }
+  return productMetadata(product);
+}
 
 async function ProductDetailSection({ params }: ProductPageProps) {
   const { slug } = await params;
@@ -42,7 +42,7 @@ async function ProductDetailSection({ params }: ProductPageProps) {
 
   return (
     <>
-      {/* <JsonLd data={productJsonLd(product)} /> */}
+      <JsonLd data={productJsonLd(product)} />
       <ProductDetailClient product={product} />
     </>
   );

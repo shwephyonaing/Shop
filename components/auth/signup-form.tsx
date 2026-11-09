@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 
 import { Marker, MarkerContent } from "@/components/ui/marker";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,31 @@ export default function SignUpForm() {
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+    form.clearErrors();
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        form.reset({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+        form.clearErrors();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [form]);
+
   function onSubmit(data: RegisterInput) {
     startTransition(async () => {
       const result = await registerUser(data);
@@ -59,6 +84,14 @@ export default function SignUpForm() {
 
         return;
       }
+
+      form.reset({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      form.clearErrors();
 
       const verifyOtpUrl = new URL("/verify-otp", window.location.origin);
       verifyOtpUrl.searchParams.set("email", result.data!.email);
@@ -87,13 +120,13 @@ export default function SignUpForm() {
         </>
       }
     >
-      <GoogleSignInButton />
+      <GoogleSignInButton callbackUrl="/" />
       <Marker variant="separator">
         <MarkerContent className="text-muted-foreground text-[11px] font-medium tracking-[0.18em] uppercase">
           or continue with email
         </MarkerContent>
       </Marker>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off">
         <FieldGroup className="gap-5">
           <Controller
             name="name"
