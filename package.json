@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run prisma7:generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "npm run prisma7:generate",
     "prisma7:generate": "prisma7 generate",
-    "prisma7:migrate": "prisma7 migrate dev"
+    "prisma7:migrate": "prisma7 migrate dev",
+    "prisma7:deploy": "prisma7 migrate deploy",
+    "deploy": "npm run prisma7:deploy && npm run build"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
