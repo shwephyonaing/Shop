@@ -7,7 +7,7 @@ import { sendEmail } from "./email";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
-  // trustedOrigins: ["http://localhost:5173"],
+  trustedOrigins: ["https://www.shwephyonaing.cv/"],
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
